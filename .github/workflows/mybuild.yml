@@ -33,19 +33,11 @@ jobs:
       - name: Package artifacts
         shell: pwsh
         run: |
-          # 建立資料夾
-          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          $src  = "target\x86_64-pc-windows-msvc\release"
+          $dst  = "rav1e-x86_64.zip"
 
-          # 複製 *.lib 和 *.a 檔案
-          Copy-Item -Path "target\x86_64-pc-windows-msvc\release\*.lib" -Destination dist -ErrorAction SilentlyContinue
-          Copy-Item -Path "target\x86_64-pc-windows-msvc\release\*.a"   -Destination dist -ErrorAction SilentlyContinue
-
-          # 複製 capi 資料夾
-          Copy-Item -Path "target\x86_64-pc-windows-msvc\release\capi" -Destination "dist\capi" -Recurse -Force
-
-          # 壓縮成 zip
-          Compress-Archive -Path dist\* -DestinationPath rav1e-x86_64.zip -Force
-
+          Compress-Archive -Path "$src\*" -DestinationPath $dst -Force
+    
       - name: Upload Clang build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -63,10 +55,10 @@ jobs:
         with:
           targets: aarch64-pc-windows-msvc
 
-      - name: Install LLVM
-        uses: llvm/llvm-project@main
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2.0.7
         with:
-          toolchain: clang
+          arch: arm64
         
       - name: Install cargo-c
         run: cargo install cargo-c
@@ -80,18 +72,10 @@ jobs:
       - name: Package artifacts
         shell: pwsh
         run: |
-          # 建立資料夾
-          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          $src = "target\aarch64-pc-windows-msvc\release"
+          $dst = "rav1e-aarch64.zip"
 
-          # 複製檔案 (*.lib 和 *.a)
-          Copy-Item -Path "target\aarch64-pc-windows-msvc\release\*.lib" -Destination dist -ErrorAction SilentlyContinue
-          Copy-Item -Path "target\aarch64-pc-windows-msvc\release\*.a"   -Destination dist -ErrorAction SilentlyContinue
-
-          # 複製 capi 資料夾
-          Copy-Item -Path "target\aarch64-pc-windows-msvc\release\capi" -Destination "dist\capi" -Recurse -Force
-
-          # 壓縮成 zip
-          Compress-Archive -Path dist\* -DestinationPath rav1e-aarch64.zip -Force
+          Compress-Archive -Path "$src\*" -DestinationPath $dst -Force
 
       - name: Upload Clang build artifact
         uses: actions/upload-artifact@v4
@@ -100,6 +84,7 @@ jobs:
           path: ${{ github.workspace }}\dist\rav1e-aarch64.zip
   upload-release:
     runs-on: ubuntu_latest
+    needs: [build-x86_64, build-aarch64]
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v4
