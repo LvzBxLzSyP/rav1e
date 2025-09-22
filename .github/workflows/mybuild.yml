@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rav1e-x86_64
-          path: ${{ GITHUB_WORKSPACE }}\dist\rav1e-x86_64.zip
+          path: ${{ github.workspace }}\dist\rav1e-x86_64.zip
 
   build-aarch64:
     runs-on: windows-11-arm
@@ -97,9 +97,38 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rav1e-aarch64
-          path: ${{ GITHUB_WORKSPACE }}\dist\rav1e-aarch64.zip
+          path: ${{ github.workspace }}\dist\rav1e-aarch64.zip
   upload-release:
     runs-on: ubuntu_latest
     steps:
       - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: .
+      - name: Create Git Tag
+        run: |
+          DATE=$(date -u +"%Y-%m-%d-%H-%M-%S")
+          TAG_NAME="autobuild-${DATE}"
+          RELEASE_NAME="rav1e Auto Build ${DATE}"
+
+          # Export to GitHub Actions environment
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+        
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git tag $TAG_NAME
+          git push origin $RELEASE_NAME
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.RELEASE_NAME }}
+          files: |
+            ./rav1e-x86_64.zip
+            ./rav1e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
         
