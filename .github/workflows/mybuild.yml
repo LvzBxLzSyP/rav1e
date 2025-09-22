@@ -9,15 +9,8 @@ permissions:
   contents: write   # 允許上傳 release
 
 jobs:
-  build:
+  build-x86_64:
     runs-on: windows-latest
-
-    strategy:
-      matrix:
-        target: 
-          - x86_64-pc-windows-msvc
-          - aarch64-pc-windows-msvc
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,7 +18,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: x86_64-pc-windows-msvc
 
       - name: Set up NASM
         uses: ilammy/setup-nasm@v1
@@ -35,20 +28,78 @@ jobs:
 
       - name: Build staticlib with cargo-c
         run: |
-          cargo cbuild --release --target ${{ matrix.target }} --library-type staticlib
+          cargo cbuild --release --target x86_64-pc-windows-msvc --library-type staticlib
 
       - name: Package artifacts
+        shell: pwsh
         run: |
-          mkdir -p dist
-          cp target/${{ matrix.target }}/release/*.lib dist/ || true
-          cp target/${{ matrix.target }}/release/*.a dist/ || true
-          cp -r target/${{ matrix.target }}/release/capi dist/capi
-          zip -r rav1e-${{ matrix.target }}.zip dist
-        shell: bash
+          # 建立資料夾
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
 
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
+          # 複製 *.lib 和 *.a 檔案
+          Copy-Item -Path "target\x86_64-pc-windows-msvc\release\*.lib" -Destination dist -ErrorAction SilentlyContinue
+          Copy-Item -Path "target\x86_64-pc-windows-msvc\release\*.a"   -Destination dist -ErrorAction SilentlyContinue
+
+          # 複製 capi 資料夾
+          Copy-Item -Path "target\x86_64-pc-windows-msvc\release\capi" -Destination "dist\capi" -Recurse -Force
+
+          # 壓縮成 zip
+          Compress-Archive -Path dist\* -DestinationPath rav1e-x86_64.zip -Force
+
+      - name: Upload Clang build artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: rav1e-${{ matrix.target }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: rav1e-x86_64
+          path: ${{ GITHUB_WORKSPACE }}\dist\rav1e-x86_64.zip
+
+  build-aarch64:
+    runs-on: windows-11-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-pc-windows-msvc
+
+      - name: Install LLVM
+        uses: llvm/llvm-project@main
+        with:
+          toolchain: clang
+        
+      - name: Install cargo-c
+        run: cargo install cargo-c
+
+      - name: Build staticlib with cargo-c
+        run: |
+          set CC=clang-cl
+          set CXX=clang-cl
+          cargo cbuild --release --target aarch64-pc-windows-msvc --library-type staticlib
+
+      - name: Package artifacts
+        shell: pwsh
+        run: |
+          # 建立資料夾
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+
+          # 複製檔案 (*.lib 和 *.a)
+          Copy-Item -Path "target\aarch64-pc-windows-msvc\release\*.lib" -Destination dist -ErrorAction SilentlyContinue
+          Copy-Item -Path "target\aarch64-pc-windows-msvc\release\*.a"   -Destination dist -ErrorAction SilentlyContinue
+
+          # 複製 capi 資料夾
+          Copy-Item -Path "target\aarch64-pc-windows-msvc\release\capi" -Destination "dist\capi" -Recurse -Force
+
+          # 壓縮成 zip
+          Compress-Archive -Path dist\* -DestinationPath rav1e-aarch64.zip -Force
+
+      - name: Upload Clang build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rav1e-aarch64
+          path: ${{ GITHUB_WORKSPACE }}\dist\rav1e-aarch64.zip
+  upload-release:
+    runs-on: ubuntu_latest
+    steps:
+      - name: Download Artifact
+        
