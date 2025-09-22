@@ -32,7 +32,7 @@ jobs:
 
       - name: Build staticlib with cargo-c
         run: |
-          cargo cbuild --release --target ${{ matrix.target }} --lib-type staticlib
+          cargo cbuild --release --target ${{ matrix.target }} --library-type staticlib
 
       - name: Package artifacts
         run: |
