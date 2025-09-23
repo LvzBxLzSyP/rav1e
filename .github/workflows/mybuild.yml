@@ -113,7 +113,7 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git tag $TAG_NAME
-          git push origin $RELEASE_NAME
+          git push origin $TAG_NAME
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -122,7 +122,7 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           files: |
             ./rav1e-x86_64.zip
-            ./rav1e
+            ./rav1e-aarch64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
