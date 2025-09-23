@@ -99,7 +99,7 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          path: .
+          path: ./rav1e
       - name: Create Git Tag
         run: |
           DATE=$(date -u +"%Y-%m-%d-%H-%M-%S")
@@ -121,8 +121,8 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           name: ${{ env.RELEASE_NAME }}
           files: |
-            ./rav1e-x86_64.zip
-            ./rav1e-aarch64.zip
+            ./rav1e/rav1e-x86_64.zip
+            ./rav1e/rav1e-aarch64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
