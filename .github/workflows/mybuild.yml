@@ -65,9 +65,11 @@ jobs:
         run: cargo install cargo-c
 
       - name: Build staticlib with cargo-c
+        shell: powershell
         run: |
-          set CC=clang-cl
-          set CXX=clang-cl
+          $env:CC="clang-cl"
+          $env:CXX="clang-cl"
+          $env:AR="llvm-lib"
           cargo cbuild --release --target aarch64-pc-windows-msvc --library-type staticlib
 
       - name: Package artifacts
