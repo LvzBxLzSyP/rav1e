@@ -86,7 +86,7 @@ jobs:
           name: rav1e-aarch64
           path: ${{ github.workspace }}\rav1e-aarch64.zip
   upload-release:
-    runs-on: ubuntu_latest
+    runs-on: ubuntu-latest
     needs: [build-x86_64, build-aarch64]
     steps:
       - name: Download Artifact
