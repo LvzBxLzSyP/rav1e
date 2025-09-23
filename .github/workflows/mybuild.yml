@@ -30,12 +30,12 @@ jobs:
 
       - name: Build staticlib with cargo-c
         run: |
-          cargo cbuild --release --target x86_64-pc-windows-msvc --library-type staticlib
+          cargo cinstall --release --target x86_64-pc-windows-msvc --library-type staticlib --prefix "./dist/"
 
       - name: Package artifacts
         shell: pwsh
         run: |
-          $src  = "target\x86_64-pc-windows-msvc\release"
+          $src  = "dist"
           $dst  = "rav1e-x86_64.zip"
 
           Compress-Archive -Path "$src\*" -DestinationPath $dst -Force
@@ -74,12 +74,12 @@ jobs:
           $env:CC="clang-cl"
           $env:CXX="clang-cl"
           $env:AR="llvm-lib"
-          cargo cbuild --release --target aarch64-pc-windows-msvc --library-type staticlib
+          cargo cinstall --release --target aarch64-pc-windows-msvc --library-type staticlib --prefix "./dist/"
 
       - name: Package artifacts
         shell: pwsh
         run: |
-          $src = "target\aarch64-pc-windows-msvc\release"
+          $src = "dist"
           $dst = "rav1e-aarch64.zip"
 
           Compress-Archive -Path "$src\*" -DestinationPath $dst -Force
